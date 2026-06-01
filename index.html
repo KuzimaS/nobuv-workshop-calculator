@@ -1,0 +1,1466 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nobuv - интерактивный разбор и калькулятор работ</title>
+  <meta name="description" content="Интерактивный калькулятор для встречи Nobuv: выбор направлений автоматизации, фиксация состава работ, сроков и итоговой стоимости.">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080a0c;
+      --surface: #101316;
+      --surface-2: #171a1e;
+      --paper: #f4efe6;
+      --paper-soft: #d2cbc0;
+      --muted: #9098a2;
+      --line: rgba(244, 239, 230, 0.14);
+      --line-strong: rgba(184, 145, 84, 0.48);
+      --gold: #b89154;
+      --gold-soft: #d7b46f;
+      --steel: #8aa2ad;
+      --good: #8ea58f;
+      --warn: #bf9364;
+      --max: 1280px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Aptos, Tahoma, sans-serif;
+      font-size: 1rem;
+      line-height: 1.55;
+      letter-spacing: 0;
+      color: var(--paper);
+      background: var(--bg);
+      overflow-x: clip;
+      overflow-wrap: break-word;
+    }
+
+    a {
+      color: var(--gold-soft);
+      text-underline-offset: 0.18em;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible {
+      outline: 3px solid var(--gold);
+      outline-offset: 3px;
+    }
+
+    .page {
+      width: 100%;
+      max-width: var(--max);
+      margin-inline: auto;
+      padding-inline: 28px;
+      min-width: 0;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      border-bottom: 1px solid var(--line);
+      background: rgba(8, 7, 5, 0.94);
+      backdrop-filter: blur(14px);
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      min-height: 58px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      font-weight: 850;
+      color: var(--paper);
+    }
+
+    .mark {
+      display: grid;
+      place-items: center;
+      inline-size: 32px;
+      block-size: 32px;
+      border: 1px solid var(--line-strong);
+      border-radius: 4px;
+      color: var(--gold-soft);
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 900;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .ghost-btn,
+    .solid-btn {
+      min-height: 36px;
+      padding: 7px 12px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      color: var(--paper-soft);
+      background: transparent;
+    }
+
+    .solid-btn {
+      color: #15100a;
+      border-color: var(--gold-soft);
+      background: var(--gold-soft);
+      font-weight: 800;
+    }
+
+    .ghost-btn:hover,
+    .solid-btn:hover {
+      border-color: var(--gold);
+    }
+
+    .hero {
+      padding-block: 68px 34px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(300px, 0.46fr);
+      gap: 36px;
+      align-items: end;
+    }
+
+    .kicker {
+      margin: 0 0 12px;
+      color: var(--gold-soft);
+      font-size: 0.82rem;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      color: var(--paper);
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.06;
+      letter-spacing: 0;
+      overflow-wrap: anywhere;
+    }
+
+    h1 {
+      max-width: 14ch;
+      font-size: 4rem;
+      font-weight: 700;
+    }
+
+    h2 {
+      max-width: 22ch;
+      font-size: 2.25rem;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .lead {
+      max-width: 74ch;
+      margin-top: 22px;
+      color: var(--paper-soft);
+      font-size: 1.09rem;
+    }
+
+    .brief {
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: rgba(242, 232, 214, 0.028);
+    }
+
+    .brief-row {
+      display: grid;
+      grid-template-columns: 112px 1fr;
+      gap: 14px;
+      padding: 13px 15px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brief-row:last-child {
+      border-bottom: 0;
+    }
+
+    .brief dt {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .brief dd {
+      margin: 0;
+      color: var(--paper-soft);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 22px;
+      padding-block: 28px 56px;
+      align-items: start;
+    }
+
+    .summary {
+      position: sticky;
+      top: 78px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: rgba(242, 232, 214, 0.026);
+    }
+
+    .chapter {
+      padding-block: 28px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .chapter:first-child {
+      padding-top: 0;
+    }
+
+    .chapter:last-child {
+      border-bottom: 0;
+    }
+
+    .chapter-head {
+      display: grid;
+      grid-template-columns: minmax(0, 0.78fr) minmax(260px, 0.48fr);
+      gap: 22px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    .chapter-note {
+      color: var(--muted);
+      font-size: 0.96rem;
+    }
+
+    .panel-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .fact,
+    .decision,
+    .preset,
+    .final-panel {
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: rgba(242, 232, 214, 0.026);
+      padding: 16px;
+    }
+
+    .fact h3,
+    .preset h3 {
+      margin-bottom: 9px;
+    }
+
+    .fact p,
+    .preset p,
+    .decision p {
+      color: var(--paper-soft);
+    }
+
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .preset {
+      text-align: left;
+    }
+
+    .preset button {
+      width: 100%;
+      margin-top: 14px;
+    }
+
+    .decision {
+      margin-bottom: 14px;
+      padding: 0;
+      overflow: clip;
+    }
+
+    .decision-summary {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 7px;
+      padding: 16px;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .decision-summary::-webkit-details-marker,
+    .choice-more summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .decision-summary::after {
+      content: "Развернуть блок";
+      width: fit-content;
+      margin-top: 6px;
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      color: var(--gold-soft);
+      font-size: 0.78rem;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .decision[open] .decision-summary::after {
+      content: "Свернуть блок";
+    }
+
+    .decision-title {
+      color: var(--paper);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.22rem;
+      line-height: 1.1;
+    }
+
+    .decision-intro {
+      max-width: 80ch;
+      color: var(--paper-soft);
+      font-size: 0.96rem;
+    }
+
+    .decision-body {
+      display: grid;
+      gap: 15px;
+      padding: 0 16px 16px;
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .choice-card {
+      display: grid;
+      gap: 6px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: rgba(8, 7, 5, 0.36);
+    }
+
+    .choice-card:has(input:checked) {
+      border-color: var(--line-strong);
+      background: rgba(214, 176, 102, 0.075);
+    }
+
+    .choice {
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr);
+      gap: 8px 10px;
+      align-items: start;
+      cursor: pointer;
+    }
+
+    .choice input {
+      inline-size: 18px;
+      block-size: 18px;
+      accent-color: var(--gold);
+    }
+
+    .choice strong {
+      color: var(--paper);
+      font-size: 0.96rem;
+    }
+
+    .choice span {
+      grid-column: 2;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .choice-more {
+      margin-top: 4px;
+      border-top: 1px solid var(--line);
+      padding-top: 9px;
+    }
+
+    .choice-more summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--gold-soft);
+      cursor: pointer;
+      font-size: 0.86rem;
+      font-weight: 800;
+    }
+
+    .choice-more summary::after {
+      content: "+";
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .choice-more[open] summary::after {
+      content: "-";
+    }
+
+    .choice-more ul {
+      display: grid;
+      gap: 6px;
+      margin: 9px 0 0;
+      padding-left: 18px;
+      color: var(--paper-soft);
+      font-size: 0.9rem;
+    }
+
+    .notes {
+      display: grid;
+      gap: 7px;
+    }
+
+    .notes label {
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 72px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      color: var(--paper);
+      background: rgba(8, 7, 5, 0.46);
+      padding: 11px 12px;
+    }
+
+    .summary {
+      padding: 16px;
+    }
+
+    .summary h2 {
+      font-size: 1.32rem;
+      margin-bottom: 12px;
+    }
+
+    .summary-line {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding-block: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .summary-line span {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .summary-line strong {
+      color: var(--paper);
+      text-align: right;
+    }
+
+    .price-lock {
+      margin-top: 14px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      color: var(--muted);
+      background: rgba(8, 7, 5, 0.36);
+      font-size: 0.92rem;
+    }
+
+    .price-lock strong {
+      display: block;
+      color: var(--gold-soft);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.3rem;
+      margin-top: 4px;
+    }
+
+    .selected-list {
+      display: grid;
+      gap: 8px;
+      margin: 14px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .selected-list li {
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      color: var(--paper-soft);
+      font-size: 0.9rem;
+      background: rgba(8, 7, 5, 0.26);
+    }
+
+    .final-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(290px, 0.55fr);
+      gap: 14px;
+    }
+
+    .final-panel h3 {
+      margin-bottom: 10px;
+    }
+
+    .final-price {
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--gold-soft);
+      font-size: 2.25rem;
+      line-height: 1;
+    }
+
+    .final-sub {
+      margin-top: 8px;
+      color: var(--muted);
+    }
+
+    .final-list {
+      margin: 12px 0 0;
+      padding-left: 18px;
+      color: var(--paper-soft);
+    }
+
+    .package-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      border: 1px solid var(--line);
+    }
+
+    .package-table th,
+    .package-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .package-table th {
+      color: var(--gold-soft);
+      font-size: 0.84rem;
+      text-transform: uppercase;
+    }
+
+    .package-table td {
+      color: var(--paper-soft);
+    }
+
+    .print-only {
+      display: none;
+    }
+
+    @media (max-width: 1180px) {
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .summary {
+        position: static;
+      }
+
+      .hero-grid,
+      .chapter-head,
+      .final-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .page {
+        padding-inline: 16px;
+      }
+
+      h1 {
+        font-size: 2.7rem;
+      }
+
+      h2 {
+        font-size: 1.72rem;
+      }
+
+      .topbar-inner {
+        align-items: flex-start;
+        flex-direction: column;
+        padding-block: 10px;
+      }
+
+      .panel-grid,
+      .preset-grid,
+      .choice-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .brief-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+    }
+
+    @media print {
+      :root {
+        color-scheme: light;
+      }
+
+      body {
+        color: #17120c;
+        background: #fff;
+      }
+
+      .topbar,
+      .top-actions,
+      .notes,
+      .preset button,
+      .summary {
+        display: none;
+      }
+
+      .page {
+        max-width: none;
+        padding-inline: 12mm;
+      }
+
+      .workspace {
+        display: block;
+      }
+
+      .chapter,
+      .hero {
+        break-inside: avoid;
+        padding-block: 12mm;
+      }
+
+      .fact,
+      .decision,
+      .preset,
+      .final-panel,
+      .choice-card {
+        background: #fff;
+        border-color: #cfc4b1;
+      }
+
+      h1,
+      h2,
+      h3,
+      .final-price {
+        color: #17120c;
+      }
+
+      .lead,
+      .chapter-note,
+      .fact p,
+      .preset p,
+      .decision p,
+      .choice span,
+      .final-sub,
+      .final-list,
+      .package-table td {
+        color: #42392f;
+      }
+
+      .print-only {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="page topbar-inner">
+      <div class="brand"><span class="mark">N</span><span>Nobuv / разбор и расчет</span></div>
+      <div class="top-actions">
+        <button class="ghost-btn" type="button" id="resetBtn">Сбросить</button>
+        <button class="ghost-btn" type="button" id="copyBtn">Скопировать итог</button>
+        <button class="solid-btn" type="button" id="printBtn">Печать / PDF</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero page" id="start">
+      <div class="hero-grid">
+        <div>
+          <p class="kicker">Рабочий экран встречи</p>
+          <h1>Состав работ и расчет запуска</h1>
+          <p class="lead">Сначала фиксируются наблюдения и приоритеты, затем выбирается уровень по каждому направлению. Стоимость показывается в финале, когда состав уже согласован по смыслу.</p>
+        </div>
+        <dl class="brief" aria-label="Контекст встречи">
+          <div class="brief-row"><dt>Формат</dt><dd>живой разбор с выбором уровней</dd></div>
+          <div class="brief-row"><dt>Контур</dt><dd>сайт, CRM, Wazzup, телефония, оплата, лояльность, ЛК, SEO</dd></div>
+          <div class="brief-row"><dt>Стоимость</dt><dd>скрыта до финального экрана</dd></div>
+          <div class="brief-row"><dt>Итог</dt><dd>состав, ориентир стоимости и сроки запуска</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <div class="page workspace">
+      <div>
+        <section class="chapter" id="audit">
+          <div class="chapter-head">
+            <div>
+              <p class="kicker">1. С чего начинаем разговор</p>
+              <h2>Показываем факты, затем выбираем глубину</h2>
+            </div>
+            <p class="chapter-note">Эти карточки нужны не для оценки “хорошо/плохо”, а чтобы спокойно перейти к выбору: что оставить как есть, что актуализировать, что строить как систему.</p>
+          </div>
+          <div class="panel-grid">
+            <article class="fact">
+              <h3>Открытый сайт</h3>
+              <p>В открытой части сайта видны признаки устаревшей базы: карта сайта ведет на прежний домен, главный заголовок не выделен, в коде остались следы старого шаблона. Перед активным SEO основу стоит привести в порядок.</p>
+            </article>
+            <article class="fact">
+              <h3>Входящие заявки</h3>
+              <p>Заявки с сайта приходят на почту, Wazzup и amoCRM уже подключены, телефония работает через Beeline Business. Главный вопрос - собрать входящие в один управляемый контур.</p>
+            </article>
+            <article class="fact">
+              <h3>Запрос на рост</h3>
+              <p>Нужны автоответы, напоминания, оплата из CRM, кэшбэк, личный кабинет, SEO и ИИ-помощник. Их лучше выбирать слоями, чтобы первая очередь не стала слишком тяжелой.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="chapter" id="presets">
+          <div class="chapter-head">
+            <div>
+              <p class="kicker">2. Стартовый сценарий</p>
+              <h2>Можно начать с готового профиля и дальше менять блоки</h2>
+            </div>
+            <p class="chapter-note">Цены профилей не показываются на этом шаге. Кнопки только выставляют уровни, чтобы быстро начать обсуждение.</p>
+          </div>
+          <div class="preset-grid">
+            <article class="preset">
+              <h3>Минимум</h3>
+              <p>Порядок во входящих: базовая CRM-структура, сайт/почта в amoCRM, Wazzup-шаблоны, пропущенные звонки и базовый отчет.</p>
+              <button class="ghost-btn" type="button" data-preset="min">Выставить минимум</button>
+            </article>
+            <article class="preset">
+              <h3>Оптимум</h3>
+              <p>Основной сценарий: полный путь заказа в amoCRM, Wazzup-бот, оплата, журнал кэшбэка, ежедневный отчет.</p>
+              <button class="solid-btn" type="button" data-preset="opt">Выставить оптимум</button>
+            </article>
+            <article class="preset">
+              <h3>Максимум</h3>
+              <p>Платформа роста: клиентский контур, расширенное SEO, ИИ-консьерж, сегменты, повторная выручка и готовая к передаче инфраструктура.</p>
+              <button class="ghost-btn" type="button" data-preset="max">Выставить максимум</button>
+            </article>
+          </div>
+        </section>
+
+        <section class="chapter" id="site-crm">
+          <div class="chapter-head">
+            <div>
+              <p class="kicker">3. Сайт и CRM</p>
+              <h2>Здесь фиксируется глубина изменений базового контура</h2>
+            </div>
+            <p class="chapter-note">Сначала обсуждаются факты по открытому сайту и маршруту заявок, затем выбирается уровень работ.</p>
+          </div>
+
+          <details class="decision" data-module="site" open>
+            <summary class="decision-summary">
+              <span class="decision-title">Сайт, формы и SEO-база</span>
+              <span class="decision-intro">Актуальность сайта, понятность страниц услуг, формы заявок, передача фото и база для SEO-продвижения.</span>
+            </summary>
+            <div class="decision-body">
+            <div class="choice-grid" role="radiogroup" aria-label="Сайт, формы и SEO-база"></div>
+            <div class="notes">
+              <label for="note-site">Заметка по решению</label>
+              <textarea id="note-site" data-note="site" placeholder="Например: сначала актуализировать текущий сайт, новый дизайн не включать."></textarea>
+            </div>
+            </div>
+          </details>
+
+          <details class="decision" data-module="crm" open>
+            <summary class="decision-summary">
+              <span class="decision-title">amoCRM: воронки, поля, статусы</span>
+              <span class="decision-intro">Этапы заказа, ответственные, фото, забор, оценка, согласование, работа, оплата и выдача.</span>
+            </summary>
+            <div class="decision-body">
+            <div class="choice-grid" role="radiogroup" aria-label="amoCRM"></div>
+            <div class="notes">
+              <label for="note-crm">Заметка по решению</label>
+              <textarea id="note-crm" data-note="crm" placeholder="Например: нужна полная воронка с этапами диагностики и доставки."></textarea>
+            </div>
+            </div>
+          </details>
+        </section>
+
+        <section class="chapter" id="communications">
+          <div class="chapter-head">
+            <div>
+              <p class="kicker">4. Коммуникации</p>
+              <h2>Выбираем, где отвечает бот, а где нужен человек</h2>
+            </div>
+            <p class="chapter-note">Здесь фиксируются границы автоматического ответа: первый контакт, сбор фото, недозвон, сложный вопрос и передача менеджеру.</p>
+          </div>
+
+          <details class="decision" data-module="wazzup" open>
+            <summary class="decision-summary">
+              <span class="decision-title">Wazzup, автоответы и ИИ-помощник</span>
+              <span class="decision-intro">Повторяющиеся вопросы, автоматический сбор данных и момент, когда диалог должен перейти менеджеру.</span>
+            </summary>
+            <div class="decision-body">
+            <div class="choice-grid" role="radiogroup" aria-label="Wazzup и ИИ"></div>
+            <div class="notes">
+              <label for="note-wazzup">Заметка по решению</label>
+              <textarea id="note-wazzup" data-note="wazzup" placeholder="Например: ИИ только на первые вопросы, сложное сразу менеджеру."></textarea>
+            </div>
+            </div>
+          </details>
+
+          <details class="decision" data-module="beeline" open>
+            <summary class="decision-summary">
+              <span class="decision-title">Beeline Business: звонки и пропущенные</span>
+              <span class="decision-intro">Пропущенные звонки, задачи менеджеру, повторный звонок и отчетность по источникам.</span>
+            </summary>
+            <div class="decision-body">
+            <div class="choice-grid" role="radiogroup" aria-label="Beeline Business"></div>
+            <div class="notes">
+              <label for="note-beeline">Заметка по решению</label>
+              <textarea id="note-beeline" data-note="beeline" placeholder="Например: достаточно пропущенных и задач, расширенные отчеты позже."></textarea>
+            </div>
+            </div>
+          </details>
+        </section>
+
+        <section class="chapter" id="money">
+          <div class="chapter-head">
+            <div>
+              <p class="kicker">5. Оплата и лояльность</p>
+              <h2>Деньги и бонусы лучше запускать только от событий CRM</h2>
+            </div>
+            <p class="chapter-note">Здесь фиксируется, нужна ли оплата как простая ссылка или как событие, которое запускает статус, чек, бонусы и отчет.</p>
+          </div>
+
+          <details class="decision" data-module="payments" open>
+            <summary class="decision-summary">
+              <span class="decision-title">Оплата из CRM</span>
+              <span class="decision-intro">Когда клиент платит, кто отправляет ссылку, как подтверждается оплата и что происходит при ошибке или неоплате.</span>
+            </summary>
+            <div class="decision-body">
+            <div class="choice-grid" role="radiogroup" aria-label="Оплата из CRM"></div>
+            <div class="notes">
+              <label for="note-payments">Заметка по решению</label>
+              <textarea id="note-payments" data-note="payments" placeholder="Например: ссылка и статусы оплаты на первом этапе, ЛК-оплата позже."></textarea>
+            </div>
+            </div>
+          </details>
+
+          <details class="decision" data-module="loyalty" open>
+            <summary class="decision-summary">
+              <span class="decision-title">Кэшбэк и журнал бонусов</span>
+              <span class="decision-intro">Начисление, списание, ограничения, история операций и правила ручной корректировки.</span>
+            </summary>
+            <div class="decision-body">
+            <div class="choice-grid" role="radiogroup" aria-label="Кэшбэк и лояльность"></div>
+            <div class="notes">
+              <label for="note-loyalty">Заметка по решению</label>
+              <textarea id="note-loyalty" data-note="loyalty" placeholder="Например: журнал бонусов сейчас, отображение клиенту во второй очереди."></textarea>
+            </div>
+            </div>
+          </details>
+        </section>
+
+        <section class="chapter" id="growth">
+          <div class="chapter-head">
+            <div>
+              <p class="kicker">6. Рост и прозрачность</p>
+              <h2>ЛК, отчеты и передача - только если первая очередь не перегружена</h2>
+            </div>
+            <p class="chapter-note">Эти блоки легко сделать слишком большими. На встрече удобно решить, что входит в старт, а что остается после аудита и запуска базы.</p>
+          </div>
+
+          <details class="decision" data-module="portal" open>
+            <summary class="decision-summary">
+              <span class="decision-title">Статусная страница или личный кабинет</span>
+              <span class="decision-intro">Статус заказа, история изделий, бонусы, повторный забор, оплата и документы.</span>
+            </summary>
+            <div class="decision-body">
+            <div class="choice-grid" role="radiogroup" aria-label="Личный кабинет"></div>
+            <div class="notes">
+              <label for="note-portal">Заметка по решению</label>
+              <textarea id="note-portal" data-note="portal" placeholder="Например: начать со статусной ссылки, полноценный ЛК после CRM."></textarea>
+            </div>
+            </div>
+          </details>
+
+          <details class="decision" data-module="reporting" open>
+            <summary class="decision-summary">
+              <span class="decision-title">Отчетность</span>
+              <span class="decision-intro">Ежедневные и еженедельные цифры по источникам, скорости ответа, пропущенным, оплатам и повторным клиентам.</span>
+            </summary>
+            <div class="decision-body">
+            <div class="choice-grid" role="radiogroup" aria-label="Отчетность"></div>
+            <div class="notes">
+              <label for="note-reporting">Заметка по решению</label>
+              <textarea id="note-reporting" data-note="reporting" placeholder="Например: ежедневный отчет на старте, расширенная аналитика позже."></textarea>
+            </div>
+            </div>
+          </details>
+
+          <details class="decision" data-module="transfer" open>
+            <summary class="decision-summary">
+              <span class="decision-title">Инфраструктура и передача</span>
+              <span class="decision-intro">Аккаунты, доступы, роли, документация по интеграциям и порядок передачи проекта.</span>
+            </summary>
+            <div class="decision-body">
+            <div class="choice-grid" role="radiogroup" aria-label="Инфраструктура и передача"></div>
+            <div class="notes">
+              <label for="note-transfer">Заметка по решению</label>
+              <textarea id="note-transfer" data-note="transfer" placeholder="Например: нужны отдельные аккаунты под Nobuv и карта передачи."></textarea>
+            </div>
+            </div>
+          </details>
+        </section>
+
+        <section class="chapter" id="final">
+          <div class="chapter-head">
+            <div>
+              <p class="kicker">7. Финал встречи</p>
+              <h2>Итоговый состав, срок и стоимость</h2>
+            </div>
+            <p class="chapter-note">Этот экран открывается в конце, когда блоки уже выбраны. Здесь можно показать вилку пакетов и конкретный расчет по текущей конфигурации.</p>
+          </div>
+
+          <div class="final-grid">
+            <article class="final-panel">
+              <h3>Текущая конфигурация</h3>
+              <div class="final-price" id="finalPrice">0 ₽</div>
+              <p class="final-sub" id="finalTerm">Срок будет рассчитан после выбора блоков.</p>
+              <ul class="final-list" id="finalList"></ul>
+            </article>
+            <article class="final-panel">
+              <h3>Ближайший пакет</h3>
+              <p id="packageHint">Выберите блоки, чтобы определить ближайший пакет.</p>
+              <table class="package-table" aria-label="Пакетные ориентиры">
+                <thead>
+                  <tr><th>Пакет</th><th>Ориентир</th><th>Срок</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Минимум</td><td>от 590 000 ₽</td><td>10-15 рабочих дней</td></tr>
+                  <tr><td>Оптимум</td><td>от 1 190 000 ₽</td><td>4-6 недель</td></tr>
+                  <tr><td>Максимум</td><td>от 2 250 000 ₽</td><td>8-12 недель</td></tr>
+                </tbody>
+              </table>
+            </article>
+          </div>
+          <p class="print-only" id="printSummary"></p>
+        </section>
+      </div>
+
+      <aside class="summary" aria-label="Сводка выбранных направлений">
+        <h2>Сводка без цены</h2>
+        <div class="summary-line"><span>Выбрано блоков</span><strong id="selectedCount">0</strong></div>
+        <div class="summary-line"><span>Уровень</span><strong id="levelLabel">не выбран</strong></div>
+        <div class="summary-line"><span>Ориентир срока</span><strong id="termLabel">не выбран</strong></div>
+        <div class="price-lock">Стоимость скрыта до финального экрана.<strong>Откроется в итоговом блоке</strong></div>
+        <ul class="selected-list" id="selectedList"></ul>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const BASE_PRICE = 100000;
+
+    const modules = {
+      site: {
+        title: "Сайт, формы и SEO-база",
+        options: [
+          { value: "skip", label: "Не включать на старте", detail: "Фиксируем как тему после аудита.", price: 0, level: 0 },
+          { value: "min", label: "Быстрая актуализация", detail: "Карта сайта, служебные файлы, заголовки, описания и базовые формы.", price: 90000, level: 1 },
+          { value: "opt", label: "Посадочная структура", detail: "Основа сайта, услуги, формы, заявки, первичная SEO-структура.", price: 160000, level: 2 },
+          { value: "max", label: "SEO-система", detail: "Услуги, материалы, бренды, районы, кейсы и разметка для поиска.", price: 300000, level: 3 }
+        ]
+      },
+      crm: {
+        title: "amoCRM",
+        options: [
+          { value: "skip", label: "Не включать на старте", detail: "Оставить текущую CRM без изменения.", price: 0, level: 0 },
+          { value: "min", label: "Базовая воронка", detail: "Этапы, поля, источники, задачи, причины отказа.", price: 150000, level: 1 },
+          { value: "opt", label: "Полный путь заказа", detail: "Фото, забор, оценка, согласование, работа, оплата, выдача.", price: 240000, level: 2 },
+          { value: "max", label: "Операционный центр", detail: "Сроки реакции, роли, курьеры, сегменты, контроль зависаний.", price: 360000, level: 3 }
+        ]
+      },
+      wazzup: {
+        title: "Wazzup и ИИ",
+        options: [
+          { value: "skip", label: "Не включать на старте", detail: "Оставить ручную коммуникацию.", price: 0, level: 0 },
+          { value: "min", label: "Шаблоны и статусы", detail: "Первый ответ, недозвон, готовность, просьба отзыва.", price: 80000, level: 1 },
+          { value: "opt", label: "Бот-квалификатор", detail: "Сбор фото, изделия, адреса, слота, передача в amoCRM.", price: 180000, level: 2 },
+          { value: "max", label: "ИИ-консьерж", detail: "Частые вопросы, подсказки оператору, передача сложных случаев.", price: 300000, level: 3 }
+        ]
+      },
+      beeline: {
+        title: "Beeline Business",
+        options: [
+          { value: "skip", label: "Не включать на старте", detail: "Звонки остаются как сейчас.", price: 0, level: 0 },
+          { value: "min", label: "Пропущенные и задачи", detail: "Фиксация пропущенных, задача менеджеру, повторный звонок.", price: 60000, level: 1 },
+          { value: "opt", label: "Контроль звонков", detail: "Источники, статусы, скорость реакции, связка со сделками.", price: 90000, level: 2 },
+          { value: "max", label: "Отчеты по звонкам", detail: "Отчеты по менеджерам, причинам, скорости реакции.", price: 130000, level: 3 }
+        ]
+      },
+      payments: {
+        title: "Оплата из CRM",
+        options: [
+          { value: "skip", label: "Не включать на старте", detail: "Оплату оставить вне автоматизации.", price: 0, level: 0 },
+          { value: "min", label: "Ручная ссылка", detail: "Менеджер отправляет ссылку, статус фиксируется вручную.", price: 0, level: 1 },
+          { value: "opt", label: "Статусы оплаты", detail: "Отправлено, оплачено, ошибка, нужна помощь.", price: 120000, level: 2 },
+          { value: "max", label: "Оплата + события", detail: "Оплата запускает статус, чек, бонусы, уведомления.", price: 200000, level: 3 }
+        ]
+      },
+      loyalty: {
+        title: "Кэшбэк и лояльность",
+        options: [
+          { value: "skip", label: "Не включать на старте", detail: "Вернуться после настройки сделок и оплат.", price: 0, level: 0 },
+          { value: "min", label: "Отложить, но описать правила", detail: "Правила начисления и списания фиксируются в документации.", price: 0, level: 1 },
+          { value: "opt", label: "Первая версия журнала", detail: "Начисление, списание, корректировка, связь со сделкой.", price: 130000, level: 2 },
+          { value: "max", label: "Лояльность + сегменты", detail: "История, сроки действия, сегменты, повторные касания.", price: 210000, level: 3 }
+        ]
+      },
+      portal: {
+        title: "ЛК или статусная ссылка",
+        options: [
+          { value: "skip", label: "Не включать на старте", detail: "Статусы только через менеджера и сообщения.", price: 0, level: 0 },
+          { value: "min", label: "Статусная ссылка", detail: "Клиент видит статус заказа без полноценного аккаунта.", price: 0, level: 1 },
+          { value: "opt", label: "Личный кабинет", detail: "История заказов, бонусы, адреса, повторный забор.", price: 220000, level: 2 },
+          { value: "max", label: "Сервисный хаб", detail: "ЛК + рекомендации, обращения, повторные продажи.", price: 350000, level: 3 }
+        ]
+      },
+      reporting: {
+        title: "Отчетность",
+        options: [
+          { value: "skip", label: "Не включать на старте", detail: "Отчеты остаются ручными.", price: 0, level: 0 },
+          { value: "min", label: "Ежедневный отчет", detail: "Заявки, источники, пропущенные, статусы.", price: 70000, level: 1 },
+          { value: "opt", label: "Дашборд контроля", detail: "Источники, оплаты, повтор, скорость ответа.", price: 120000, level: 2 },
+          { value: "max", label: "Панель руководителя", detail: "Повторная выручка, сегменты, работа менеджеров, узкие места.", price: 200000, level: 3 }
+        ]
+      },
+      transfer: {
+        title: "Инфраструктура и передача",
+        options: [
+          { value: "skip", label: "Не включать на старте", detail: "Оставить без отдельного контура передачи.", price: 0, level: 0 },
+          { value: "min", label: "Базовая документация", detail: "Список доступов, роли, схема интеграций.", price: 40000, level: 1 },
+          { value: "opt", label: "Эксплуатационный контур", detail: "Аккаунты, среды, роли, инструкция эксплуатации.", price: 50000, level: 2 },
+          { value: "max", label: "Готовность к передаче", detail: "Передача, зоны ответственности, ротация секретов, карта развития.", price: 100000, level: 3 }
+        ]
+      }
+    };
+
+    const optionExplanations = {
+      site: {
+        skip: [
+          "Оставляем сайт как входящую точку и не меняем структуру на первом этапе.",
+          "Подходит, если сейчас важнее быстро собрать CRM и коммуникации.",
+          "Риск: SEO и формы останутся ограничителем роста до отдельного этапа."
+        ],
+        min: [
+          "Приводим в порядок базовые элементы, которые мешают индексации и доверию.",
+          "Проверяем карту сайта, служебные файлы, заголовки, описания и основные формы.",
+          "Подходит как быстрый ремонт текущего сайта перед рекламой или SEO."
+        ],
+        opt: [
+          "Собираем понятную структуру страниц услуг и точек заявки.",
+          "Формы, фото и обращения должны уходить в управляемый маршрут, а не просто на почту.",
+          "Это хороший старт, если сайт остается текущим, но должен работать как источник сделок."
+        ],
+        max: [
+          "Строим SEO-систему вокруг услуг, материалов, брендов, районов и кейсов.",
+          "Добавляем разметку для поиска и каркас будущего контента.",
+          "Подходит, если Nobuv хочет стабильно получать органический спрос, а не только заявки из переписок."
+        ]
+      },
+      crm: {
+        skip: [
+          "amoCRM остается как есть, без перестройки этапов и полей.",
+          "Подходит, если сначала нужно проверить сайт или коммуникации.",
+          "Риск: автоматизация будет опираться на текущую дисциплину ведения сделок."
+        ],
+        min: [
+          "Фиксируем базовые этапы, источники, ответственных и причины отказа.",
+          "Менеджеру становится понятнее, что делать с новой заявкой и где она сейчас.",
+          "Подходит, если нужен быстрый порядок без большой перестройки процесса."
+        ],
+        opt: [
+          "Описываем полный путь заказа от фото и забора до оплаты и выдачи.",
+          "Каждый важный шаг получает статус, поле или задачу в amoCRM.",
+          "Это основа для оплаты, бонусов, напоминаний и отчетов."
+        ],
+        max: [
+          "CRM становится операционным центром: роли, курьеры, сегменты, контроль зависаний.",
+          "Руководству видно, где заказ тормозит и кто отвечает за следующий шаг.",
+          "Подходит, если нужно управлять не только заявками, но и качеством сервиса."
+        ]
+      },
+      wazzup: {
+        skip: [
+          "Коммуникация остается ручной, без новых сценариев автоответов.",
+          "Подходит, если пока нет согласованных правил ответа и передачи диалога.",
+          "Риск: повторяющиеся вопросы продолжат занимать время менеджеров."
+        ],
+        min: [
+          "Готовим понятные шаблоны: первый ответ, недозвон, готовность, просьба отзыва.",
+          "Менеджеры отвечают быстрее и одинаковее, без потери человеческого тона.",
+          "Подходит как аккуратный старт без сложного бота."
+        ],
+        opt: [
+          "Бот собирает первичные данные: фото, изделие, адрес, удобное время и контакт.",
+          "После сбора информации диалог передается в amoCRM и менеджеру.",
+          "Подходит, если нужно снизить ручную рутину на входе."
+        ],
+        max: [
+          "ИИ-помощник отвечает на частые вопросы по базе знаний и подсказывает оператору.",
+          "Сложные, спорные и нестандартные случаи сразу уходят человеку.",
+          "Подходит для масштабирования сервиса без ощущения бездушного бота."
+        ]
+      },
+      beeline: {
+        skip: [
+          "Телефония остается в текущем режиме, без дополнительных задач и отчетов.",
+          "Подходит, если основные заявки идут через мессенджеры и сайт.",
+          "Риск: пропущенные звонки сложнее контролировать в общей воронке."
+        ],
+        min: [
+          "Каждый пропущенный звонок превращается в задачу на повторный контакт.",
+          "Менеджеру понятен следующий шаг, а руководству проще видеть потери.",
+          "Подходит как быстрый контроль входящего потока."
+        ],
+        opt: [
+          "Звонки связываются со сделками, источниками и статусами реакции.",
+          "Можно видеть не просто факт звонка, а его влияние на заказ.",
+          "Подходит, если телефон остается важным каналом продаж."
+        ],
+        max: [
+          "Добавляем отчеты по менеджерам, причинам, скорости реакции и повторным звонкам.",
+          "Становится видно, где сервис теряет клиента до оформления заказа.",
+          "Подходит для управленческого контроля и регулярных планерок."
+        ]
+      },
+      payments: {
+        skip: [
+          "Оплата остается вне контура автоматизации.",
+          "Подходит, если сначала нужно наладить статусы заказа и коммуникации.",
+          "Риск: бонусы и отчеты придется сверять вручную."
+        ],
+        min: [
+          "Менеджер отправляет ссылку вручную и отмечает результат в сделке.",
+          "Это не полная автоматизация, но уже понятный порядок для команды.",
+          "Подходит как осторожный первый шаг без глубокой интеграции."
+        ],
+        opt: [
+          "Статусы оплаты возвращаются в CRM: отправлено, оплачено, ошибка, нужна помощь.",
+          "Менеджер видит, кому нужно напомнить или помочь с оплатой.",
+          "Это база для корректных бонусов и отчетов."
+        ],
+        max: [
+          "Оплата запускает следующие действия: смену статуса, чек, бонусы, уведомления.",
+          "Снижается ручная сверка между менеджером, платежом и клиентом.",
+          "Подходит, если оплата должна стать частью единого клиентского пути."
+        ]
+      },
+      loyalty: {
+        skip: [
+          "Кэшбэк не включается в стартовый запуск.",
+          "Подходит, если еще не согласованы правила начисления и списания.",
+          "Лучше вернуться после настройки CRM-статусов и оплаты."
+        ],
+        min: [
+          "Фиксируем правила программы: когда начислять, когда списывать, что ограничивать.",
+          "Это подготовка к внедрению без разработки клиентского интерфейса.",
+          "Подходит, если нужно сначала согласовать механику с командой."
+        ],
+        opt: [
+          "Создаем журнал операций: начисление, списание, корректировка, связь со сделкой.",
+          "Баланс считается из истории операций, а не хранится как одно ручное число.",
+          "Это надежнее для спорных ситуаций и будущего личного кабинета."
+        ],
+        max: [
+          "Добавляем сегменты, сроки действия, повторные касания и историю для клиента.",
+          "Лояльность становится не только бонусом, но и инструментом возврата.",
+          "Подходит, если Nobuv хочет системно растить повторные заказы."
+        ]
+      },
+      portal: {
+        skip: [
+          "Клиент видит статус через менеджера и сообщения.",
+          "Подходит, если в CRM еще нет стабильных статусов.",
+          "Так старт не перегружается большим клиентским интерфейсом."
+        ],
+        min: [
+          "Даем клиенту простую статусную страницу без полноценного аккаунта.",
+          "Можно показать этап заказа и базовую информацию без сложного личного кабинета.",
+          "Подходит как быстрый компромисс между прозрачностью и сроками."
+        ],
+        opt: [
+          "Личный кабинет показывает историю заказов, бонусы, адреса и повторный забор.",
+          "Клиенту проще вернуться без нового объяснения всей ситуации менеджеру.",
+          "Подходит, когда CRM-статусы уже надежно ведутся."
+        ],
+        max: [
+          "Кабинет становится сервисным хабом: рекомендации, обращения, повторные продажи.",
+          "Можно развивать клиентский опыт вокруг ухода за изделиями и возврата клиента.",
+          "Подходит для долгосрочной цифровой платформы."
+        ]
+      },
+      reporting: {
+        skip: [
+          "Отчеты остаются ручными или в текущих системах.",
+          "Подходит, если команда пока не готова фиксировать данные дисциплинированно.",
+          "Риск: решения будут приниматься по ощущениям, а не по цифрам."
+        ],
+        min: [
+          "Ежедневно видно заявки, источники, пропущенные и ключевые статусы.",
+          "Это помогает быстро замечать провалы во входящем потоке.",
+          "Подходит для первой управленческой прозрачности."
+        ],
+        opt: [
+          "Дашборд показывает источники, оплаты, повтор, скорость ответа и узкие места.",
+          "Руководству проще понимать, что влияет на деньги и сервис.",
+          "Подходит как рабочий экран регулярного контроля."
+        ],
+        max: [
+          "Панель руководителя собирает повторную выручку, сегменты и работу менеджеров.",
+          "Можно видеть не только текущие заявки, но и качество клиентской базы.",
+          "Подходит, если управление должно опираться на регулярную аналитику."
+        ]
+      },
+      transfer: {
+        skip: [
+          "Отдельный контур передачи не делается на старте.",
+          "Подходит для быстрого пилота, где все доступы остаются как сейчас.",
+          "Риск: позже придется отдельно разбирать владение аккаунтами и документацию."
+        ],
+        min: [
+          "Фиксируем список доступов, роли и простую схему интеграций.",
+          "Команде понятнее, где что находится и кто за что отвечает.",
+          "Подходит для аккуратного старта без тяжелой инфраструктуры."
+        ],
+        opt: [
+          "Готовим отдельные аккаунты, рабочие среды, роли и инструкцию эксплуатации.",
+          "Проект проще поддерживать, передавать и развивать без зависимости от одного человека.",
+          "Подходит для нормального production-порядка."
+        ],
+        max: [
+          "Описываем передачу, зоны ответственности, ротацию секретов и карту развития.",
+          "Nobuv получает не только внедрение, но и управляемый цифровой контур.",
+          "Подходит, если проект должен спокойно жить после запуска."
+        ]
+      }
+    };
+
+    const presets = {
+      min: { site: "min", crm: "min", wazzup: "min", beeline: "min", payments: "skip", loyalty: "skip", portal: "skip", reporting: "min", transfer: "min" },
+      opt: { site: "opt", crm: "opt", wazzup: "opt", beeline: "opt", payments: "opt", loyalty: "opt", portal: "skip", reporting: "opt", transfer: "opt" },
+      max: { site: "max", crm: "max", wazzup: "max", beeline: "max", payments: "max", loyalty: "max", portal: "max", reporting: "max", transfer: "max" }
+    };
+
+    const state = {
+      choices: { ...presets.opt },
+      notes: {}
+    };
+
+    const formatter = new Intl.NumberFormat("ru-RU");
+
+    const escapeHtml = (value = "") => String(value).replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "\"": "&quot;",
+      "'": "&#39;"
+    })[char]);
+
+    const renderPointList = (points) => points
+      .map((point) => `<li>${escapeHtml(point)}</li>`)
+      .join("");
+
+    const getOption = (moduleKey) => {
+      const module = modules[moduleKey];
+      return module.options.find((option) => option.value === state.choices[moduleKey]) || module.options[0];
+    };
+
+    const calculate = () => {
+      const selected = Object.keys(modules)
+        .map((key) => ({ key, module: modules[key], option: getOption(key) }))
+        .filter((item) => item.option.value !== "skip" && (item.option.price > 0 || item.option.level > 0));
+
+      const paidSelected = selected.filter((item) => item.option.price > 0);
+      const subtotal = paidSelected.reduce((sum, item) => sum + item.option.price, 0);
+      const total = subtotal > 0 ? subtotal + BASE_PRICE : 0;
+      const maxLevel = selected.reduce((max, item) => Math.max(max, item.option.level), 0);
+      const levelLabel = maxLevel === 0 ? "не выбран" : maxLevel === 1 ? "минимальный" : maxLevel === 2 ? "оптимальный" : "расширенный";
+      const term = total === 0 ? "не выбран" : maxLevel >= 3 || total >= 1800000 ? "8-12 недель" : maxLevel === 2 || total >= 900000 ? "4-6 недель" : "10-15 рабочих дней";
+      const packageName = total === 0 ? "не выбран" : total < 900000 ? "Минимум" : total < 1700000 ? "Оптимум" : "Максимум";
+
+      return { selected, paidSelected, subtotal, total, maxLevel, levelLabel, term, packageName };
+    };
+
+    const renderChoices = () => {
+      const openDetails = new Set(
+        Array.from(document.querySelectorAll(".choice-more[open]"))
+          .map((details) => details.dataset.optionKey)
+      );
+
+      document.querySelectorAll(".decision").forEach((decision) => {
+        const key = decision.dataset.module;
+        const grid = decision.querySelector(".choice-grid");
+        grid.innerHTML = modules[key].options.map((option) => {
+          const optionKey = `${key}-${option.value}`;
+          const inputId = `choice-${optionKey}`;
+          const points = optionExplanations[key]?.[option.value] || [option.detail];
+
+          return `
+          <div class="choice-card">
+            <label class="choice" for="${inputId}">
+              <input id="${inputId}" type="radio" name="${key}" value="${option.value}" ${state.choices[key] === option.value ? "checked" : ""}>
+              <strong>${escapeHtml(option.label)}</strong>
+              <span>${escapeHtml(option.detail)}</span>
+            </label>
+            <details class="choice-more" data-option-key="${optionKey}" ${openDetails.has(optionKey) ? "open" : ""}>
+              <summary>Подробнее по варианту</summary>
+              <ul>${renderPointList(points)}</ul>
+            </details>
+          </div>
+        `;
+        }).join("");
+      });
+    };
+
+    const render = () => {
+      renderChoices();
+      const result = calculate();
+
+      document.getElementById("selectedCount").textContent = String(result.selected.length);
+      document.getElementById("levelLabel").textContent = result.levelLabel;
+      document.getElementById("termLabel").textContent = result.term;
+
+      const selectedList = document.getElementById("selectedList");
+      selectedList.innerHTML = result.selected.length
+        ? result.selected.map((item) => `<li><strong>${escapeHtml(item.module.title)}</strong><br>${escapeHtml(item.option.label)}</li>`).join("")
+        : "<li>Пока ничего не выбрано.</li>";
+
+      document.getElementById("finalPrice").textContent = result.total ? `${formatter.format(result.total)} ₽` : "0 ₽";
+      document.getElementById("finalTerm").textContent = result.total
+        ? `Ориентир срока: ${result.term}. Ближайший пакет: ${result.packageName}.`
+        : "Срок будет рассчитан после выбора блоков.";
+      document.getElementById("packageHint").textContent = result.total
+        ? `По текущему составу ближе всего пакет "${result.packageName}". Итог можно уточнить после доступа к системам и финального состава.`
+        : "Выберите блоки, чтобы определить ближайший пакет.";
+
+      const finalList = document.getElementById("finalList");
+      finalList.innerHTML = result.selected.map((item) => {
+        const note = state.notes[item.key] ? ` Примечание: ${escapeHtml(state.notes[item.key])}` : "";
+        return `<li><strong>${escapeHtml(item.module.title)}:</strong> ${escapeHtml(item.option.label)}.${note}</li>`;
+      }).join("");
+
+      document.getElementById("printSummary").textContent = buildSummaryText(result);
+    };
+
+    const buildSummaryText = (result = calculate()) => {
+      const lines = [
+        "Nobuv - итог выбранной конфигурации",
+        `Стоимость: ${result.total ? formatter.format(result.total) + " ₽" : "0 ₽"}`,
+        `Срок: ${result.term}`,
+        `Ближайший пакет: ${result.packageName}`,
+        "",
+        "Состав:"
+      ];
+
+      result.selected.forEach((item) => {
+        const note = state.notes[item.key] ? ` / ${state.notes[item.key]}` : "";
+        lines.push(`- ${item.module.title}: ${item.option.label}${note}`);
+      });
+
+      return lines.join("\n");
+    };
+
+    document.addEventListener("change", (event) => {
+      if (event.target.matches("input[type='radio']")) {
+        state.choices[event.target.name] = event.target.value;
+        render();
+      }
+    });
+
+    document.addEventListener("input", (event) => {
+      if (event.target.matches("textarea[data-note]")) {
+        state.notes[event.target.dataset.note] = event.target.value.trim();
+        render();
+      }
+    });
+
+    document.querySelectorAll("[data-preset]").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.choices = { ...presets[button.dataset.preset] };
+        render();
+      });
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      state.choices = Object.fromEntries(Object.keys(modules).map((key) => [key, "skip"]));
+      state.notes = {};
+      document.querySelectorAll("textarea[data-note]").forEach((textarea) => {
+        textarea.value = "";
+      });
+      render();
+    });
+
+    document.getElementById("copyBtn").addEventListener("click", async () => {
+      const text = buildSummaryText();
+      try {
+        await navigator.clipboard.writeText(text);
+        document.getElementById("copyBtn").textContent = "Скопировано";
+        setTimeout(() => {
+          document.getElementById("copyBtn").textContent = "Скопировать итог";
+        }, 1400);
+      } catch {
+        window.prompt("Скопируйте итог:", text);
+      }
+    });
+
+    document.getElementById("printBtn").addEventListener("click", () => window.print());
+
+    render();
+  </script>
+</body>
+</html>
